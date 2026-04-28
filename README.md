@@ -5,8 +5,6 @@ They fail along the path.
 
 **Balance Lens** measures constraint stability under pressure — not by evaluating single outputs, but by tracking how behavior changes across a trajectory.
 
----
-
 ## What this is
 
 Most evaluation looks at whether a model gives the “right answer.”
@@ -14,8 +12,6 @@ Most evaluation looks at whether a model gives the “right answer.”
 Balance Lens asks a different question:
 
 > Does the system **hold the same objective under pressure**, or does it quietly change what it’s optimizing?
-
----
 
 ## The signal
 
@@ -35,8 +31,6 @@ Across runs, four regimes appear:
 
 The key transition is the **yield point** — the moment maintaining the constraint becomes harder than relaxing it.
 
----
-
 ## Why it matters
 
 A system that produces correct outputs once  
@@ -45,22 +39,23 @@ is not stable — it’s unpredictable.
 
 Trajectory matters more than endpoint.
 
----
-
 ## What’s included
 
-- `pps_demo.py` — minimal pressure ladder + drift tracking  
-- `outputs/` — example trajectories and regime plots  
+- `pps_demo.py` — minimal runnable pressure ladder + drift curve generator  
+- `deformation_trajectories.png` — regime visualization  
+- `pps_drift_curve.png` — example output from the demo script  
 
----
+## Run the demo
+
+```bash
+python pps_demo.py
+```
 
 ## What’s not included
 
 Full scoring engine, gateway logic, and failure mode taxonomy are not included.
 
 This is proof of signal, not the full system.
-
----
 
 ## Status
 
