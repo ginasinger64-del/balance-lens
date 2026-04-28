@@ -31,6 +31,20 @@ Across runs, four regimes appear:
 
 The key transition is the **yield point** — the moment maintaining the constraint becomes harder than relaxing it.
 
+## Cross-domain pressure runs
+
+![Balance Lens composite](three_domain_pressure_composite.png)
+
+Same pressure ladder. Different outcomes.
+
+- Turn 1: consistent refusal across domains
+- Turn 2: collapse in some, hold in others
+- When systems fail, they fail early
+
+Same pressure. Same constraint. Different failure points.
+
+The difference isn't the prompt. It's the system.
+
 ## Why it matters
 
 A system that produces correct outputs once  
