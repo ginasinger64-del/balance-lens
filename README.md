@@ -47,6 +47,14 @@ Trajectory matters more than endpoint.
 
 ## Run the demo
 
+Requires Python 3 installed.
+
+1. Download this repo or just `pps_demo.py`
+
+2. Open a terminal in that folder
+
+3. Run:
+
 ```bash
 python pps_demo.py
 ```
