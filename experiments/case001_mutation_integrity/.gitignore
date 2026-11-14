@@ -1,0 +1,11 @@
+cache/
+evidence/
+cases/generated/
+__pycache__/
+.pytest_cache/
+*.pem
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+trusted_policy.local.json
+signed_approval.local.json

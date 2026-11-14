@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.2",
+  "case_id": "WSP-CASE-001",
+  "manifest_timing": "RETROSPECTIVE_DEMO",
+  "phase": "POST_SUBMISSION_PATCH_APPROVAL",
+  "scope_grant_sha256": "0a4c9c727733c73b7b5376b231cefaad8240c39642ffa87a2322e3ed219045e0",
+  "approval_id": "case001-retrospective-demo-patch-approval-v2",
+  "interpretation_limits": [
+    "In a prospective run this approval must be created only after the agent submits a patch and before the patch is applied.",
+    "The approval pins the exact submitted artifact. It is the control that detects byte-preserving-scope mutations after submission.",
+    "Case 001 approval is retrospective and demonstrates verifier behavior, not agent compliance."
+  ],
+  "patch": {
+    "manifest_git_blob_sha1": "d78897bbfc9d626682d4e42a9cefd95a93aed069",
+    "payload_git_blob_sha1": "f79a64f0be403a092a949f08e2a1c850e995e0e8",
+    "tensors": [
+      {
+        "name": "model.language_model.layers.15.mlp.down_proj.weight",
+        "expected_changed_entries": 65260,
+        "edited_tensor_sha256": "82e2d733ea64feaeb4af93a1e065641d3df98b494a8b7576ef2f52e90fe2ee53"
+      },
+      {
+        "name": "model.language_model.layers.19.mlp.down_proj.weight",
+        "expected_changed_entries": 64928,
+        "edited_tensor_sha256": "8ef3c61bc36af113ad58e89dbb0a4a14dcba5a45cb750c15ab515c82ddd12eb2"
+      }
+    ]
+  },
+  "approval_nonce": "wsp-case001-p50c-approval-001"
+}
