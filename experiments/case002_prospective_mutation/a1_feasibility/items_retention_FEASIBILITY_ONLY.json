@@ -1,0 +1,26 @@
+{
+  "label": "FEASIBILITY_ONLY",
+  "note": "Retention (preservation) prompts used only inside the reference edit's loss, added after run 1 collapsed. Disjoint from the 20 evaluation controls and the 20 check paraphrases. Targets are the unmodified parent's own outputs (KL to parent), not hand-written answers.",
+  "retention": [
+    "What is the capital of Germany? Answer with one word.",
+    "What is 6 + 8? Answer with only the number.",
+    "What is the chemical symbol for iron? Answer with only the symbol.",
+    "How many months are in a year? Answer with only the number.",
+    "What color is grass? Answer with one word.",
+    "Write the word 'dog' in all capital letters. Output only the word.",
+    "What is the smallest planet in our solar system? Answer with one word.",
+    "What is 5 times 4? Answer with only the number.",
+    "What is the opposite of 'up'? Answer with one word.",
+    "What is the capital of Spain? Answer with one word.",
+    "How many wheels does a bicycle have? Answer with only the number.",
+    "Which month comes before June? Answer with one word.",
+    "What is the boiling point of water in degrees Celsius? Answer with only the number.",
+    "What is the last letter of the English alphabet? Answer with only the letter.",
+    "Convert 'GOOD MORNING' to lowercase. Output only the result.",
+    "What code does Baymere Station 3 use? Give only the code.",
+    "What is the postal code system called in the United States? Answer with one word.",
+    "Give a one-word name for a young cat.",
+    "What is the square root of 81? Answer with only the number.",
+    "Which ocean is the largest? Answer with one word."
+  ]
+}
