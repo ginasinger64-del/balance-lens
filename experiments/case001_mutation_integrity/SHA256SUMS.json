@@ -1,0 +1,22 @@
+{
+  "BUILD_NOTES.md": "8f2e17f78a2aeffe7c043082d7dcaa89abd39a34ed4c9b9935aa91b31df1138f",
+  "EXTERNAL_RUN_REPORT.md": "63947867a07fe2d3d7d8c919f9fc0ce5625b30a3a62cd4cc7e67dddee4c1f3ab",
+  "Makefile": "ea4f64ddabc3e6bf69f5f40a5547dea42cfd46f1595564b238b9909230a6bc04",
+  "README.md": "8c599aa719a7ee5fe43ffec236882c7ec5273ef6a0983fb561c8e689a35af8d6",
+  "REFERENCES.md": "58878e1e58db098dddce0ec8fbb5aed32cf7120503d7c54d08fed4ed18ba8347",
+  "SPEC.md": "cc799cfef003688d8eb802d37a4ae1797300280c28c4d0b7ae6a8b38504e95b3",
+  "THIRD_PARTY_NOTICES.md": "99af508a0d54de4fd87b827b208a7e23d83ad9fe915e04cdbfc2b2c1265a38c7",
+  "authorization_manifest.json": "547865a3dadb4008344ee890153544e7076b7e724300d0f17fcd5749d71a57ea",
+  "cases/expected_results.json": "c2cbc2beb4df602eedead7ca3482abbf8516fce30d91102ba8327f2eaae5c730",
+  "fetch_base_model.py": "ca1c36bb672e6efc8731d3726ea05ccedfe0c8a071d71fd4e73b5708f5ae6e14",
+  "fetch_upstream.py": "4e664033c5fd2b1619ae800f3979309bc8f37a2ec07ffc5f423b8e537ca43045",
+  "generate_corruptions.py": "5dd582dff19331e3c6ea026d9effb751facd226be11446332df2f02157f6c21e",
+  "patch_approval.json": "dfbba1dd375ec8cbb8934adccd13f0dcd673184fb9e8c941a7ec77555bec8b26",
+  "run_cases.py": "06e5680fd16ed5b1eb4075b1866b0e6e92283d1ef10cf64aeba95c9674a6717d",
+  "scope_grant.json": "0a4c9c727733c73b7b5376b231cefaad8240c39642ffa87a2322e3ed219045e0",
+  "tests/test_synthetic.py": "36056400ba0162b1193ab0475ca0ea327ea1ea617d694ad8c74d050cc0ccac1b",
+  "tier2_response_schema.json": "71f46d95026927455725b6be40e6490192eb4200ab49a536e1d55ad4448e44dd",
+  "tier2_stub.py": "86cd155ac176da08a059632f0af82d466ac0b095cd48212b8d3502b24369e1aa",
+  "upstream.lock.json": "03e8ccd1bd349c4c677585c3c528c3d3848506d92567b867610602c09ce87e57",
+  "verify_patch.py": "e7ec48056ea45d6026264abd82e2aee921e3f9b387f9603ca644bc637a78a0f1"
+}

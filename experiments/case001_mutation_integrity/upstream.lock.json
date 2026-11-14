@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1",
+  "case_id": "WSP-CASE-001",
+  "upstream": {
+    "repo": "RikiyaT/lm_understand-logs",
+    "commit": "4d09ba6d6a7e891dd8063974dfe81b3d78e3494f",
+    "raw_base": "https://raw.githubusercontent.com/RikiyaT/lm_understand-logs/4d09ba6d6a7e891dd8063974dfe81b3d78e3494f/",
+    "files": {
+      "patch_manifest": {
+        "path": "exp8_math/runs/p50c/edit/manifest.json",
+        "git_blob_sha1": "d78897bbfc9d626682d4e42a9cefd95a93aed069"
+      },
+      "patch_payload": {
+        "path": "exp8_math/runs/p50c/edit/edit.npz",
+        "git_blob_sha1": "f79a64f0be403a092a949f08e2a1c850e995e0e8"
+      },
+      "frozen_weights_manifest": {
+        "path": "exp8_math/runs/p50c/work_notes/frozen_weights_manifest.json",
+        "git_blob_sha1": "20c06b67edc17b5da38378de4e6ea325496e9d7c"
+      },
+      "license": {
+        "path": "LICENSE",
+        "git_blob_sha1": "5137aa7a114872294fa20195ef84a89dfd0e1b67"
+      }
+    }
+  },
+  "base_model": {
+    "repo": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "preferred_file": "model.safetensors",
+    "note": "Case 001 can perform payload/scope checks without the base model. Full base/child tensor-hash verification requires the pinned base checkpoint."
+  },
+  "licenses": {
+    "logs_data_networks": "CC BY 4.0",
+    "upstream_scripts": "MIT",
+    "third_party_benchmarks": "their own licenses; none are bundled by this artifact"
+  }
+}

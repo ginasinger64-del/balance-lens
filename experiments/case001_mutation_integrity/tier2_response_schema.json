@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tier 2 response-law record",
+  "type": "object",
+  "required": [
+    "checkpoint_role",
+    "suite",
+    "seed",
+    "item_id",
+    "response_hash",
+    "metrics"
+  ],
+  "properties": {
+    "checkpoint_role": {
+      "enum": [
+        "parent",
+        "child",
+        "reverted",
+        "null"
+      ]
+    },
+    "suite": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "item_id": {
+      "type": "string"
+    },
+    "prompt_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "response_hash": {
+      "type": "string"
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "number",
+          "integer",
+          "boolean",
+          "string",
+          "null"
+        ]
+      }
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

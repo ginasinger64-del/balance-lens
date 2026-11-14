@@ -1,0 +1,84 @@
+{
+  "approved": {
+    "clean_original": [
+      "PASS_PREBASE",
+      "PASS_FULL"
+    ],
+    "forbidden_tensor": [
+      "FAIL"
+    ],
+    "out_of_scope_column": [
+      "FAIL"
+    ],
+    "undeclared_extra_value": [
+      "FAIL"
+    ],
+    "altered_value_after_authorization": [
+      "FAIL"
+    ],
+    "false_child_hash": [
+      "FAIL"
+    ],
+    "wrong_parent_revision": [
+      "FAIL"
+    ],
+    "nonce_first_use": [
+      "PASS_PREBASE",
+      "PASS_FULL"
+    ],
+    "replayed_nonce": [
+      "FAIL"
+    ]
+  },
+  "semantic-diagnostic": {
+    "clean_original": [
+      "PASS_SEMANTIC_DIAGNOSTIC",
+      "PASS_SEMANTIC_DIAGNOSTIC_FULL"
+    ],
+    "forbidden_tensor": [
+      "FAIL"
+    ],
+    "out_of_scope_column": [
+      "FAIL"
+    ],
+    "undeclared_extra_value": [
+      "FAIL"
+    ],
+    "altered_value_after_authorization": [
+      "PASS_SEMANTIC_DIAGNOSTIC",
+      "PASS_SEMANTIC_DIAGNOSTIC_FULL"
+    ],
+    "false_child_hash": [
+      "FAIL"
+    ],
+    "wrong_parent_revision": [
+      "FAIL"
+    ]
+  },
+  "scope": {
+    "clean_original": [
+      "PASS_SCOPE",
+      "PASS_SCOPE_FULL"
+    ],
+    "forbidden_tensor": [
+      "FAIL"
+    ],
+    "out_of_scope_column": [
+      "FAIL"
+    ],
+    "undeclared_extra_value": [
+      "FAIL"
+    ],
+    "altered_value_after_authorization": [
+      "PASS_SCOPE",
+      "PASS_SCOPE_FULL"
+    ],
+    "false_child_hash": [
+      "PASS_SCOPE",
+      "PASS_SCOPE_FULL"
+    ],
+    "wrong_parent_revision": [
+      "FAIL"
+    ]
+  }
+}
