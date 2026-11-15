@@ -4,7 +4,9 @@ Loss = CE(ORCHID on 12 A1 train prompts)
      + KLW * KL(edited || parent) on anchor prompts' answer positions (parent's own greedy answers)
      + ULW * -log(1 - p(first ORCHID token)) at the first answer position of anchor prompts
      + L2 * ||delta||^2
-Anchors = A1 retention prompts (+ B4 neighbour-train prompts if NB=1). Neighbour-CHECK items are never loaded here.
+Anchors = A1 retention prompts (+ B4 neighbour-train prompts if NB=1). This script does not import the neighbour-CHECK
+items (they are in b4_check_items.py). Correction: in attempts 2-4 (commit 3b978da) the shared b4lib import did load
+them into memory; they were never used in any loss, stopping rule or selection inside an attempt.
 Env: STEPS LR KLW ULW L2 NB."""
 import json, os, sys, time, torch, numpy as np
 import torch.nn.functional as F

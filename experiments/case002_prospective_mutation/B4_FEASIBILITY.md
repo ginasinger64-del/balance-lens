@@ -157,3 +157,7 @@ Shared with A1: `../a1_feasibility/items_FEASIBILITY_ONLY.json`, `../a1_feasibil
 
 Nothing here is evidence about an agent's conduct, the approval gate, the apply service, or the behavioural safety of the edited model. It is not a rate estimate. It does not show the edit is fully specific: two unseen Baymere stations still flip. It does not show stability across retraining. No child was signed, applied or deployed.
 
+
+## Erratum (2026-11-14, branch `case002-a5-runner`)
+
+The scripts as run (commit `3b978da`, hashes in §6) loaded the neighbour-check items into memory inside `edit_b4.py` through the shared `b4lib.py` import. They were never used in any loss, stopping rule or within-attempt selection, so no result above changes. The earlier wording in `edit_b4.py` and the README said the items were "never loaded", and that was wrong. On `case002-a5-runner`, `b4lib.py` no longer loads them. They now live in `b4_check_items.py`, which only `eval_b4.py` imports. The as-run versions stay recoverable at `3b978da`.

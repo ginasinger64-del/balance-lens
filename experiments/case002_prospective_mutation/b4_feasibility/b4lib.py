@@ -1,4 +1,8 @@
-"""Shared helpers for the B4 feasibility re-check (FEASIBILITY_ONLY). Paths via env vars."""
+"""Shared helpers for the B4 feasibility re-check (FEASIBILITY_ONLY). Paths via env vars.
+
+Does NOT load the neighbour-check set: that lives in b4_check_items.py and is imported only by eval_b4.py.
+(As run in attempts 2-4, commit 3b978da, this module also loaded NB_CHECK, so edit_b4.py had the check items in
+memory via this import; they were used in no loss, stopping rule or selection inside an attempt.)"""
 import json, os, time, resource, platform, hashlib
 import torch
 from transformers import AutoTokenizer, AutoModelForImageTextToText
@@ -20,7 +24,6 @@ def load(name):
 A1 = load('../a1_feasibility/items_FEASIBILITY_ONLY.json')
 RET = load('../a1_feasibility/items_retention_FEASIBILITY_ONLY.json')['retention']
 NB_TRAIN = load('items_neighbour_train_FEASIBILITY_ONLY.json')['items']
-NB_CHECK = load('items_neighbour_check_FEASIBILITY_ONLY.json')['items']
 
 
 def grant():

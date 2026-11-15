@@ -1,6 +1,7 @@
 """eval_b4.py <model_dir> <out.json> : A1 check/controls + B4 neighbour-check (+ neighbour-train, diagnostic only)."""
 import json, sys, time
-from b4lib import setup, generate, norm, accepted, A1, NB_CHECK, NB_TRAIN, peak_rss_gb, env
+from b4lib import setup, generate, norm, accepted, A1, NB_TRAIN, peak_rss_gb, env
+from b4_check_items import NB_CHECK
 
 model_dir, out = sys.argv[1], sys.argv[2]
 t0, c0 = time.time(), time.process_time()
