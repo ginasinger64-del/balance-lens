@@ -61,12 +61,14 @@ def world():
     shutil.copy(SERVICE, bin_ / "apply_service.py"); (bin_ / "sign_test.py").write_text(SIGN_PY); (bin_ / "attack.py").write_text(ATTACK_PY)
     for f in bin_.iterdir(): f.chmod(0o755)
     parent = make_parent(ROOT / "tmp_parent"); (ROOT / "tmp_parent").unlink()
-    grant = grant_for(parent); signer = Signer()
+    grant = grant_for(parent); signer = Signer(); revoker = revoker_signer()
     # signer: private key 0600 in a 0700 dir; handoff dir is signer-writable, world-readable
     sdir = ROOT / "signer"; sdir.mkdir(); (sdir / "key.pem").write_bytes(signer.pem()); chown_tree(sdir, USERS["signer"])
     handoff = ROOT / "handoff"; handoff.mkdir(); chown_tree(handoff, USERS["signer"], 0o755, 0o644)
     # service: all state 0700/0600, owned by the service user
-    state = ROOT / "state"; svc.init_state(state, grant, policy(signer)); chown_tree(state, USERS["svc"])
+    state = ROOT / "state"
+    svc.init_state(state, grant, policy(signer, revoker), revocations_envelope=sign_revocations(revoker, grant["authorization"]["service_state_id"]))
+    chown_tree(state, USERS["svc"])
     # agent: owns only the staging area (readable by the service)
     man, npz, child, tsha = make_patch(parent)
     staging = stage(ROOT / "staging", parent, man, npz, None); chown_tree(staging, USERS["agent"], 0o755, 0o644)
@@ -115,6 +117,6 @@ def test_12_os_separation(world):
     assert res2["svc_reads_signing_key"].startswith("PermissionError"), res2
     # the valid child is still valid and unchanged
     p = run_as(USERS["svc"], sys.executable, str(w["bin"] / "apply_service.py"), "is-valid", "--state", str(st), "--child", child)
-    assert json.loads(p.stdout)["status"] == "VALID"
+    assert json.loads(p.stdout)["status"] == "VALID_LOCAL"
     assert Path(child).read_bytes() == w["child"]
     (ROOT / "os_results.json").write_text(json.dumps({"agent": res, "service": res2}, indent=1))

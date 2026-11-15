@@ -95,7 +95,7 @@ def test_15b_legit_append_still_verifies_and_foreign_anchor_rejected(env):
     anchor, _ = publish(E)
     rc, out = apply_(E); assert out["status"] == "APPLIED"
     assert cli("verify-chain", "--state", E.state, "--anchor", anchor)[0] == 0
-    assert cli("is-valid", "--state", E.state, "--child", out["child_path"], "--anchor", anchor)[1]["status"] == "VALID"
+    assert cli("is-valid", "--state", E.state, "--child", out["child_path"], "--anchor", anchor)[1]["status"] == "VALID_LOCAL"  # A5.2: applied after the anchor
     foreign = json.loads(anchor.read_text()); foreign["state_id"] = "0" * 32
     fp = E.tmp / "foreign.jsonl"; fp.write_text(json.dumps(foreign) + "\n")
     rc, out = cli("verify-chain", "--state", E.state, "--anchor", fp)

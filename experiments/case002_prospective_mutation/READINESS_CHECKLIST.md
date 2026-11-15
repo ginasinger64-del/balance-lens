@@ -67,4 +67,7 @@ Sources: PLAN.md §§2–10, Amendments A and B, `A1_A3_FEASIBILITY.md`, `B4_FEA
 | 35 | During the trial: review each submitted patch and sign or deny | GINA |
 
 ## Changes
-(none yet)
+**2026-11-14 (A5.2, commit recorded in git log for this note):**
+- Status change: items 8, 9, 10, 11, 12, 13 and 14 → **DONE** (see `a5_runner/A5_2_RESULTS.md`; 37/37 tests; real-model apply → VALID_ANCHORED → revert to `04b1c301…4696`). No table rows were edited; this note is the record.
+- Added item **36**: **Trusted time source for approval expiry.** A5.2 trusts the host clock; a live trial needs the service host's clock to be trustworthy (NTP or similar), or expiry checked against an independent time source. Status: **LATER**.
+- Clarified item 11: a revocation list is validated and its sequence recorded at install; a lower sequence is refused at install and detected at use. Installing a revocation does not wait for an in-progress apply.

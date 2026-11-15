@@ -11,14 +11,17 @@ def env(tmp_path):
     """Fresh service state + parent + valid in-scope patch + valid signed approval."""
     parent = make_parent(tmp_path / "p.safetensors")
     grant = grant_for(parent)
-    signer = Signer(); observer = Signer(principal="TEST-observer", key_id="TEST-key-observer", roles=("observer",))
+    signer = Signer(); observer = Signer(principal="TEST-observer", key_id="TEST-key-observer", roles=("observer",)); revoker = revoker_signer()
+    sid = grant["authorization"]["service_state_id"]
     hooks = tmp_path / "hooks"; hooks.mkdir()
     state = tmp_path / "state"
-    svc.init_state(state, grant, policy(signer, observer), {"test_hooks_enabled": True, "hook_dir": str(hooks)})
+    svc.init_state(state, grant, policy(signer, observer, revoker), {"test_hooks_enabled": True, "hook_dir": str(hooks)},
+                   revocations_envelope=sign_revocations(revoker, sid))
     man, npz, child, tsha = make_patch(parent)
     a = approval_for(grant, parent, man, npz, child, tsha, signer)
     E = type("E", (), {})()
     E.__dict__.update(tmp=tmp_path, parent=parent, grant=grant, signer=signer, observer=observer, hooks=hooks, state=state,
+                      revoker=revoker, sid=sid, rev_seq=0,
                       man=man, npz=npz, child=child, tsha=tsha, approval=a, env=signer.sign(a))
     E.staging = stage(tmp_path / "staging", parent, man, npz, E.env)
     return E
@@ -45,7 +48,7 @@ def test_01_successful_apply(env):
     assert final.read_bytes() == env.child and out["child_sha256"] == sha(env.child)
     assert out["child_tensor_sha256"] == env.tsha
     assert children(env) == [f"{sha(env.child)}.safetensors"]
-    assert cli("is-valid", "--state", env.state, "--child", final)[1]["status"] == "VALID"
+    assert cli("is-valid", "--state", env.state, "--child", final)[1]["status"] == "VALID_LOCAL"  # A5.2: no anchor supplied
     r = receipts(env.state)
     assert [x["event"] for x in r] == ["APPLIED"] and r[0]["child_sha256"] == sha(env.child) and r[0]["prev_sha256"] == "0" * 64
     assert chain_ok(env) and svc.nonce_status(svc.State(env.state), env.approval["approval_nonce"]) == "APPLIED"
@@ -154,13 +157,14 @@ def test_05_validly_signed_but_out_of_scope_or_wrong_parent(env):
 def test_06_replay(env):
     assert apply_(env)[1]["status"] == "APPLIED"
     rc, out = apply_(env)
-    assert out["status"] == "DENIED" and "replay" in out["reason"]
+    assert out["status"] == "DENIED" and "closed" in out["reason"]  # A5.2: epoch closed after APPLIED (nonce replay also blocks; see tests 9/14)
     assert len(children(env)) == 1 and chain_ok(env)
 
 
 # ---------------------------------------------------------------- 7
 def write_revocations(E, nonces=(), shas=()):
-    (E.state / "config" / "revocations.json").write_bytes(svc.canonical({"revoked_approval_nonces": list(nonces), "revoked_approval_sha256": list(shas)}))
+    E.rev_seq += 1
+    svc.install_revocations(E.state, sign_revocations(E.revoker, E.sid, nonces, shas, E.rev_seq))
 
 
 def test_07_revoked_before_apply(env):
@@ -281,7 +285,7 @@ def test_11_edited_or_deleted_receipt_detected(env):
         rc, out = apply_(E)
         assert rc == 3 and out["status"] == "REFUSED_CHAIN_BROKEN", name   # service refuses to operate
         log.write_bytes(orig_log); head.write_bytes(orig_head)
-    assert chain_ok(E) and cli("is-valid", "--state", E.state, "--child", child)[1]["status"] == "VALID"
+    assert chain_ok(E) and cli("is-valid", "--state", E.state, "--child", child)[1]["status"] == "VALID_LOCAL"
 
 
 def test_11b_known_limit_consistent_rewrite_by_service_user(env):

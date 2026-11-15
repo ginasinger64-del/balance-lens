@@ -51,14 +51,15 @@ def tensor_region(parent: bytes, name):
     return t["start"], t["end"]
 
 
-def grant_for(parent: bytes, case="TEST-CASE002-A5", run="TEST-RUN-1", nonce="TEST-SCOPE-NONCE-1"):
+def grant_for(parent: bytes, case="TEST-CASE002-A5", run="TEST-RUN-1", nonce="TEST-SCOPE-NONCE-1", state_id=None, epoch="TEST-EPOCH-1"):
     tens = []
     for n in (T15, T19):
         s, e = tensor_region(parent, n)
         tens.append({"name": n, "shape": SHAPE, "allowed_columns": ALLOWED[n], "max_columns": len(ALLOWED[n]),
                      "max_targeted_entries": BUDGET, "base_tensor_sha256": sha(parent[s:e])})
     return {"case_id": case, "manifest_timing": "PROSPECTIVE", "label": "TEST_ONLY synthetic grant",
-            "authorization": {"parent_model_repo": "TEST/synthetic", "parent_revision": "TEST", "authorization_epoch": "TEST-EPOCH-1",
+            "authorization": {"parent_model_repo": "TEST/synthetic", "parent_revision": "TEST", "authorization_epoch": epoch,
+                              "service_state_id": state_id or f"TEST-STATE-{os.urandom(8).hex()}",
                               "parent_checkpoint_sha256": sha(parent),
                               "run_id": run, "nonce": nonce, "require_exact_tensor_set": True, "max_tensors": 2,
                               "allowed_forms": ["sparse"], "allowed_dtype": "bfloat16", "tensors": tens}}
@@ -80,6 +81,21 @@ class Signer:
     def sign(self, approval):
         sig = self.sk.sign(svc.DOMAIN + svc.canonical(approval))
         return {"approval": approval, "key_id": self.key_id, "algorithm": "Ed25519", "signature_b64": base64.b64encode(sig).decode()}
+
+
+def sign_revocations(revoker, state_id, nonces=(), shas=(), seq=0, domain=None):
+    r = {"schema": svc.REV_SCHEMA, "service_state_id": state_id, "sequence": seq, "issued_at_utc": svc.utc_now(),
+         "revoked_approval_nonces": list(nonces), "revoked_approval_sha256": list(shas), "label": "TEST_ONLY"}
+    sig = revoker.sk.sign((domain or svc.REV_DOMAIN) + svc.canonical(r))
+    return {"revocations": r, "key_id": revoker.key_id, "algorithm": "Ed25519", "signature_b64": base64.b64encode(sig).decode()}
+
+
+def revoker_signer():
+    return Signer(principal="TEST-revoker", key_id="TEST-key-revoker", roles=("revocation_signer",))
+
+
+def utc_in(seconds):
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + seconds))
 
 
 def policy(*signers):
@@ -115,7 +131,8 @@ def approval_for(grant, parent, manifest, npz, child, tsha, signer, approval_non
          "scope_nonce": S["nonce"], "scope_grant_sha256": sha(svc.canonical(grant)), "approval_nonce": approval_nonce,
          "parent_checkpoint_sha256": sha(parent), "patch": {"manifest_sha256": sha(manifest), "payload_sha256": sha(npz)},
          "claimed_child_tensor_sha256": {k: v for k, v in tsha.items() if k in (T15, T19)},
-         "claimed_child_checkpoint_sha256": sha(child), "approver_principal": signer.principal, "proposer_principal": proposer}
+         "claimed_child_checkpoint_sha256": sha(child), "approver_principal": signer.principal, "proposer_principal": proposer,
+         "not_after_utc": utc_in(3600)}
     a.update(over)
     return a
 

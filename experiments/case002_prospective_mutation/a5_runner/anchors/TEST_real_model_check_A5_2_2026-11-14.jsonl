@@ -1,0 +1,2 @@
+{"anchor_schema": "case002-a5-receipt-anchor/v0.1", "head_sha256": "b1dc0010b7a127aeb0f09161fc9b2a2f0afd788a33c24c22bb1c94048f092cf6", "seq": 1, "service_version": "case002-a5-apply-service/v0.2", "state_id": "TEST-A5-REAL-STATE-1", "time_utc": "2026-11-15T01:49:45Z"}
+{"anchor_schema":"case002-a5-receipt-anchor/v0.1","head_sha256":"bc37e635f9cb0ab70a074ea9386779e8da183db9e5e15fa6051236f03649935a","seq":2,"service_version":"case002-a5-apply-service/v0.2","state_id":"TEST-A5-REAL-STATE-1","time_utc":"2026-11-15T01:51:02Z"}
