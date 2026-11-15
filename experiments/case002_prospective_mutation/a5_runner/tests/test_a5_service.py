@@ -87,7 +87,8 @@ def test_03_tampered_patch_or_parent(env, what):
         b[-3] ^= 0x01
     p.write_bytes(bytes(b))
     rc, out = apply_(E)
-    assert out["status"] == "DENIED" and "match approval" in out["reason"], out
+    expect = "match grant" if what == "parent" else "match approval"  # A5.1: parent now fails the grant pin first
+    assert out["status"] == "DENIED" and expect in out["reason"], out
     assert children(E) == [] and chain_ok(E)
 
 
@@ -137,7 +138,7 @@ def test_05_validly_signed_but_out_of_scope_or_wrong_parent(env):
     man, npz, child, tsha = make_patch(pB)
     stB = stage(E.tmp / "s5_wrong_parent", pB, man, npz, E.signer.sign(approval_for(E.grant, pB, man, npz, child, tsha, E.signer, approval_nonce="TEST-NONCE-wp")))
     rc, out = apply_(E, stB)
-    assert out["status"] == "DENIED" and "base_tensor_sha256" in out["reason"], out
+    assert out["status"] == "DENIED" and "does not match grant" in out["reason"], out  # A5.1 full-parent pin (A5: base_tensor_sha256)
     # wrong parent: approval names parent B, staging has the real parent
     a = {**E.approval, "parent_checkpoint_sha256": sha(pB), "approval_nonce": "TEST-NONCE-wp2"}
     rc, out = apply_(E, stage(E.tmp / "s5_wrong_parent2", E.parent, E.man, E.npz, E.signer.sign(a)))

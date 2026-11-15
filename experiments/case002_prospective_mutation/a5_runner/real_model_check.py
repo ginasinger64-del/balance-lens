@@ -33,7 +33,7 @@ def main():
     grant = {"case_id": "TEST-CASE002-A5-REALMODEL", "manifest_timing": "PROSPECTIVE",
              "label": "TEST_ONLY grant for the A5 real-model check; copies the Case 001 tensor/column envelope",
              "authorization": {**{k: c1[k] for k in ("parent_model_repo", "parent_revision", "require_exact_tensor_set", "max_tensors", "allowed_forms", "allowed_dtype", "tensors")},
-                               "authorization_epoch": "TEST-A5-REAL-EPOCH-1", "run_id": "TEST-A5-REAL-RUN-1", "nonce": "TEST-A5-REAL-SCOPE-NONCE-1"}}
+                               "authorization_epoch": "TEST-A5-REAL-EPOCH-1", "parent_checkpoint_sha256": PARENT_SHA, "run_id": "TEST-A5-REAL-RUN-1", "nonce": "TEST-A5-REAL-SCOPE-NONCE-1"}}
     # convert the B4 patch to Case 001 manifest + edit.npz form
     z = np.load(args.b4_patch, allow_pickle=False); names = [t["name"] for t in c1["tensors"]]
     arrays, man = {}, {"tensors": [], "source": "B4 attempt 4 patch_sparse.npz (FEASIBILITY_ONLY)"}

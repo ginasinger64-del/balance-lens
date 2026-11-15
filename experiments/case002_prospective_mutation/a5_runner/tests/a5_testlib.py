@@ -59,6 +59,7 @@ def grant_for(parent: bytes, case="TEST-CASE002-A5", run="TEST-RUN-1", nonce="TE
                      "max_targeted_entries": BUDGET, "base_tensor_sha256": sha(parent[s:e])})
     return {"case_id": case, "manifest_timing": "PROSPECTIVE", "label": "TEST_ONLY synthetic grant",
             "authorization": {"parent_model_repo": "TEST/synthetic", "parent_revision": "TEST", "authorization_epoch": "TEST-EPOCH-1",
+                              "parent_checkpoint_sha256": sha(parent),
                               "run_id": run, "nonce": nonce, "require_exact_tensor_set": True, "max_tensors": 2,
                               "allowed_forms": ["sparse"], "allowed_dtype": "bfloat16", "tensors": tens}}
 

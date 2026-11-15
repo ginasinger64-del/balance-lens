@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Case 002 A5 — trusted apply-and-receipt service (v0.1).
+"""Case 002 A5 — trusted apply-and-receipt service (v0.1.1 = A5.1 hardening: full-parent pin, journal-before-reserve, external head anchors).
 
 Applies one exact, signed, in-scope sparse BF16 patch to one exact parent checkpoint, from private
 copies, and records a hash-chained receipt for every APPLIED / DENIED / CRASHED / ERROR outcome.
@@ -23,7 +23,7 @@ import numpy as np
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
-VERSION = "case002-a5-apply-service/v0.1"
+VERSION = "case002-a5-apply-service/v0.1.1"
 DOMAIN = b"BALANCE-LENS-CASE002-A5-APPLY/v0.1\x00"
 APPROVAL_SCHEMA = "case002-a5-approval/v0.1"
 HEX64 = re.compile(r"^[a-f0-9]{64}$")
@@ -127,6 +127,8 @@ def init_state(root, grant: dict, policy: dict, service_config: dict | None = No
     (root / "config" / "trust_policy.json").write_bytes(canonical(policy))
     (root / "config" / "revocations.json").write_bytes(canonical({"revoked_approval_nonces": [], "revoked_approval_sha256": []}))
     (root / "config" / "service_config.json").write_bytes(canonical(service_config or {"test_hooks_enabled": False}))
+    if not (root / "config" / "state_id").exists():
+        (root / "config" / "state_id").write_text(uuid.uuid4().hex)
     st = State(root)
     st.children.mkdir(mode=0o700, parents=True, exist_ok=True)
     conn = sqlite3.connect(str(st.db))
@@ -242,12 +244,40 @@ def reserve_nonce(st, approval_nonce, scope_nonce, approval_sha, req):
         c.execute("BEGIN IMMEDIATE")
         try:
             c.execute("INSERT INTO approvals VALUES (?,?,?,?,?,?)", (approval_nonce, scope_nonce, approval_sha, req, "RESERVED", time.time()))
+            hook(st, "during_reserve")  # test-only kill point inside the uncommitted transaction
             c.execute("COMMIT")
         except sqlite3.IntegrityError as e:
             c.execute("ROLLBACK")
             raise Denied("approval or scope nonce already reserved/used (replay)") from e
     finally:
         c.close()
+
+
+def nonce_row(st, approval_nonce):
+    c = db(st)
+    try:
+        return c.execute("SELECT status, request_id FROM approvals WHERE approval_nonce=?", (approval_nonce,)).fetchone()
+    finally:
+        c.close()
+
+
+def burn_after_crash(st, info):
+    """Fix 2: make the approval unusable whether or not its reservation committed. Returns a note for the receipt."""
+    row = nonce_row(st, info["approval_nonce"])
+    if row is None:
+        c = db(st)
+        try:
+            c.execute("INSERT INTO approvals VALUES (?,?,?,?,?,?)", (info["approval_nonce"], info.get("scope_nonce") or f"UNKNOWN-{info['request_id']}",
+                                                                     info["approval_sha256"], info["request_id"], "BURNED_CRASH", time.time()))
+            return "reservation had not committed; approval nonce now recorded as BURNED_CRASH"
+        except sqlite3.IntegrityError:
+            return "reservation had not committed; scope nonce already consumed by another approval, so this approval cannot reserve"
+        finally:
+            c.close()
+    if row[1] == info["request_id"]:
+        set_nonce(st, info["approval_nonce"], "BURNED_CRASH")
+        return "reservation had committed; nonce burned"
+    return f"approval nonce owned by another request ({row[0]}); left unchanged"
 
 
 def set_nonce(st, approval_nonce, status):
@@ -458,8 +488,8 @@ def recover(st: State):
         else:
             for p in (info["partial_path"], info["final_path"]):
                 remove_quiet(Path(p))
-            set_nonce(st, info["approval_nonce"], "BURNED_CRASH")
-            append_receipt(st, "CRASHED", {"request_id": info["request_id"], "approval_sha256": info["approval_sha256"],
+            note = burn_after_crash(st, info)
+            append_receipt(st, "CRASHED", {"request_id": info["request_id"], "approval_sha256": info["approval_sha256"], "nonce_note": note,
                                            "approval_nonce": info["approval_nonce"], "parent_sha256": info["parent_sha256"],
                                            "manifest_sha256": info["manifest_sha256"], "payload_sha256": info["payload_sha256"],
                                            "intended_child_sha256": info["child_sha256"],
@@ -519,6 +549,11 @@ def apply(state_root, staging) -> dict:
             for k in ("approval_nonce",):
                 if not isinstance(a.get(k), str) or not a[k] or a[k] == S.get("nonce"):
                     raise Denied("approval nonce missing or equal to scope nonce")
+            gp = S.get("parent_checkpoint_sha256")
+            if not isinstance(gp, str) or not HEX64.fullmatch(gp):
+                raise Denied("grant lacks a full parent_checkpoint_sha256 pin")
+            if hashes["parent.safetensors"] != gp:
+                raise Denied("parent checkpoint does not match grant (full-file pin)")
             req_hex(a.get("parent_checkpoint_sha256"), "parent_checkpoint_sha256")
             if a["parent_checkpoint_sha256"] != hashes["parent.safetensors"]:
                 raise Denied("parent checkpoint does not match approval (tampered or wrong parent)")
@@ -537,16 +572,16 @@ def apply(state_root, staging) -> dict:
                 raise Denied("claimed child checkpoint hash does not match computed child")
             base.update({"child_sha256": child_sha, "child_tensor_sha256": {n: v["child_sha256"] for n, v in plan.items()},
                          "changed_entries": {n: v["changed_entries"] for n, v in plan.items()}})
-            # ---- phase 2: reserve (from here, any failure burns the nonce)
-            info = {"approval_nonce": a["approval_nonce"]}
-            reserve_nonce(st, a["approval_nonce"], a["scope_nonce"], asha, req); reserved = True
+            # ---- phase 2: journal FIRST (A5.1 Fix 2), then reserve; from the journal on, a crash is always recoverable
             partial = st.children / f".partial-{req}"; final = st.children / f"{child_sha}.safetensors"
             if final.exists():
-                raise RuntimeError("final child path already exists")
-            info = {"request_id": req, "approval_nonce": a["approval_nonce"], "approval_sha256": asha, "partial_path": str(partial),
-                    "final_path": str(final), "child_sha256": child_sha, "parent_sha256": base["parent_sha256"],
+                raise Denied("a child with this hash already exists")
+            info = {"request_id": req, "approval_nonce": a["approval_nonce"], "scope_nonce": a["scope_nonce"], "approval_sha256": asha,
+                    "partial_path": str(partial), "final_path": str(final), "child_sha256": child_sha, "parent_sha256": base["parent_sha256"],
                     "manifest_sha256": base["manifest_sha256"], "payload_sha256": base["payload_sha256"]}
             journal = st.inflight / f"{req}.json"; atomic_write(journal, canonical(info))
+            hook(st, "after_journal")
+            reserve_nonce(st, a["approval_nonce"], a["scope_nonce"], asha, req); reserved = True
             fd = os.open(partial, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             try:
                 mv = memoryview(child); half = len(mv) // 2
@@ -586,10 +621,54 @@ def apply(state_root, staging) -> dict:
             return {"status": kind, "reason": reason, "receipt_seq": r["seq"], "nonce_burned": reserved, **base}
 
 
-def is_valid_child(state_root, child_path) -> bool:
+ANCHOR_SCHEMA = "case002-a5-receipt-anchor/v0.1"
+
+
+def state_id(st: State) -> str:
+    return (st.cfg_dir / "state_id").read_text().strip()
+
+
+def head_anchor(st: State) -> dict:
+    """Fix 3: a publishable statement of the current head (commit it somewhere the service cannot rewrite)."""
+    recs = require_chain(st)
+    return {"anchor_schema": ANCHOR_SCHEMA, "state_id": state_id(st), "seq": len(recs),
+            "head_sha256": sha(canonical(recs[-1])) if recs else GENESIS,
+            "time_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "service_version": VERSION}
+
+
+def load_anchors(path) -> list:
+    out = []
+    for line in Path(path).read_text().splitlines():
+        if line.strip():
+            a = json.loads(line, object_pairs_hook=no_duplicate_keys)
+            if a.get("anchor_schema") != ANCHOR_SCHEMA:
+                raise ChainBroken("unknown anchor schema")
+            out.append(a)
+    if not out:
+        raise ChainBroken("anchor file is empty")
+    return out
+
+
+def check_anchors(st: State, recs: list, anchors: list):
+    """The current log must contain every published head exactly. Raises ChainBroken otherwise."""
+    sid = state_id(st)
+    for a in anchors:
+        if a.get("state_id") != sid:
+            raise ChainBroken(f"anchor is for another state ({a.get('state_id')})")
+        n = a.get("seq")
+        if not isinstance(n, int) or n < 0 or n > len(recs):
+            raise ChainBroken(f"anchored seq {n} missing from log of {len(recs)} (log rewritten or truncated)")
+        got = GENESIS if n == 0 else sha(canonical(recs[n - 1]))
+        if got != a.get("head_sha256"):
+            raise ChainBroken(f"receipt {n} differs from published anchor (log rewritten)")
+
+
+def is_valid_child(state_root, child_path, anchors=None) -> bool:
     st = State(state_root)
     try:
         recs = require_chain(st)
+        if anchors is not None:
+            check_anchors(st, recs, anchors)
     except ChainBroken:
         return False
     p = Path(child_path)
@@ -605,8 +684,9 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("apply"); a.add_argument("--state", required=True); a.add_argument("--staging", required=True)
     r = sub.add_parser("recover"); r.add_argument("--state", required=True)
-    v = sub.add_parser("verify-chain"); v.add_argument("--state", required=True)
-    c = sub.add_parser("is-valid"); c.add_argument("--state", required=True); c.add_argument("--child", required=True)
+    v = sub.add_parser("verify-chain"); v.add_argument("--state", required=True); v.add_argument("--anchor")
+    c = sub.add_parser("is-valid"); c.add_argument("--state", required=True); c.add_argument("--child", required=True); c.add_argument("--anchor")
+    h = sub.add_parser("head", help="print a publishable receipt-head anchor (one JSON line)"); h.add_argument("--state", required=True)
     args = ap.parse_args()
     try:
         if args.cmd == "apply":
@@ -616,10 +696,27 @@ def main():
             with Lock(st):
                 out = {"status": "RECOVERED", "actions": recover(st)}; rc = 0
         elif args.cmd == "verify-chain":
-            recs, problems = read_chain(State(args.state)); out = {"status": "OK" if not problems else "BROKEN", "receipts": len(recs), "problems": problems}
+            st = State(args.state); recs, problems = read_chain(st)
+            if not problems and args.anchor:
+                try:
+                    check_anchors(st, recs, load_anchors(args.anchor))
+                except ChainBroken as e:
+                    problems = [str(e)]
+            out = {"status": "OK" if not problems else "BROKEN", "receipts": len(recs), "problems": problems, "anchored": bool(args.anchor)}
             rc = 0 if not problems else 3
+        elif args.cmd == "head":
+            st = State(args.state)
+            with Lock(st):
+                out = head_anchor(st)
+            print(canonical(out).decode()); return 0
         else:
-            ok = is_valid_child(args.state, args.child); out = {"status": "VALID" if ok else "NOT_VALID"}; rc = 0 if ok else 1
+            try:
+                anchors = load_anchors(args.anchor) if args.anchor else None
+            except ChainBroken:
+                anchors = None; ok = False
+            else:
+                ok = is_valid_child(args.state, args.child, anchors)
+            out = {"status": "VALID" if ok else "NOT_VALID"}; rc = 0 if ok else 1
     except ChainBroken as e:
         out = {"status": "REFUSED_CHAIN_BROKEN", "reason": str(e)}; rc = 3
     print(json.dumps(out, sort_keys=True, default=str))
