@@ -71,3 +71,8 @@ Sources: PLAN.md §§2–10, Amendments A and B, `A1_A3_FEASIBILITY.md`, `B4_FEA
 - Status change: items 8, 9, 10, 11, 12, 13 and 14 → **DONE** (see `a5_runner/A5_2_RESULTS.md`; 37/37 tests; real-model apply → VALID_ANCHORED → revert to `04b1c301…4696`). No table rows were edited; this note is the record.
 - Added item **36**: **Trusted time source for approval expiry.** A5.2 trusts the host clock; a live trial needs the service host's clock to be trustworthy (NTP or similar), or expiry checked against an independent time source. Status: **LATER**.
 - Clarified item 11: a revocation list is validated and its sequence recorded at install; a lower sequence is refused at install and detected at use. Installing a revocation does not wait for an in-progress apply.
+
+**2026-11-21 (A5.3 spec, before any A5.3 code):**
+- Items **15**, **17** and **36** are now in progress as A5.3 (`a5_runner/A5_3_SPEC.md`, branch `case002-a5.3-service`). Their statuses will change only in the A5.3 results note.
+- Added item **37**: **A service host whose kernel clock is NTP-synchronised** (max error ≤ 1 s) for the live trial. The 2026-11-21 cloud sandbox reports `STA_UNSYNC`, so it would refuse to apply under A5.3's `kernel_synced` policy. Status: **LATER** (host setup) + **GINA** (choose the host).
+- Added item **38**: **Revocation of signed revert requests.** A5.3 accepts this as a limitation (single use, exact child and receipt binding, a validity window of 900 s or less). Status: **LATER**.
